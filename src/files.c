@@ -1,5 +1,4 @@
 #include "files.h"
-#include "tinyfiledialogs.h"
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
