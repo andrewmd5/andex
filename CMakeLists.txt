@@ -116,8 +116,7 @@ compile_shader(${SHADER_DIR}/shaders.glsl ${GENERATED_DIR}/shaders.h
 
 set(GENERATED_SHADERS ${GENERATED_DIR}/shaders.h)
 
-set(ANDEX_SOURCES src/svg.c src/buffer.c src/editor.c src/main.c
-                  ${TFD_DIR}/tinyfiledialogs.c ${GENERATED_SHADERS})
+set(ANDEX_SOURCES src/svg.c src/buffer.c src/editor.c src/main.c ${GENERATED_SHADERS})
 
 if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
   list(APPEND ANDEX_SOURCES src/files.c src/mac_window.c)
