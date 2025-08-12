@@ -1,0 +1,31 @@
+[submodule "third-party/sokol"]
+	path = third-party/sokol
+	url = https://github.com/floooh/sokol
+[submodule "third-party/md4c"]
+	path = third-party/md4c
+	url = https://github.com/mity/md4c
+[submodule "third-party/sokol-tools"]
+	path = third-party/sokol-tools
+	url = https://github.com/floooh/sokol-tools-bin.git
+[submodule "third-party/hmm"]
+	path = third-party/hmm
+	url = https://github.com/HandmadeMath/HandmadeMath
+[submodule "third-party/nanosvg"]
+	path = third-party/nanosvg
+	url = https://github.com/memononen/nanosvg/
+[submodule "third-party/fontstash"]
+	path = third-party/fontstash
+	url = https://github.com/andrewmd5/fontstash.git
+[submodule "third-party/clay"]
+	path = third-party/clay
+	url = https://github.com/andrewmd5/clay/
+	branch = feats
+[submodule "third-party/sokol_gp"]
+	path = third-party/sokol_gp
+	url = https://github.com/andrewmd5/sokol_gp
+[submodule "third-party/stb"]
+	path = third-party/stb
+	url = https://github.com/nothings/stb
+[submodule "third-party/emsdk"]
+	path = third-party/emsdk
+	url = https://github.com/emscripten-core/emsdk.git
