@@ -1,0 +1,52 @@
+{
+  "icons": [
+    {
+      "id": "RES_ICON_SUN",
+      "path": "icons/sun.max.fill.svg"
+    },
+    {
+      "id": "RES_ICON_MOON",
+      "path": "icons/moon.fill.svg"
+    },
+    {
+      "id": "RES_ICON_HISTORY",
+      "path": "icons/clock.arrow.circlepath.svg"
+    },
+    {
+      "id": "RES_ICON_TRASH",
+      "path": "icons/trash.svg"
+    },
+    {
+      "id": "RES_ICON_ARROW_DOWN_CIRCLE",
+      "path": "icons/arrow.down.circle.svg"
+    },
+    {
+      "id": "RES_ICON_TURN_UP_RIGHT",
+      "path": "icons/arrow.turn.up.right.svg"
+    }
+  ],
+  "images": [
+    {
+      "id": "RES_IMG_WIN",
+      "path": "images/win.png"
+    }
+  ],
+  "fonts": [
+    {
+      "id": "RES_FONT_LATO_REGULAR",
+      "path": "fonts/Lato-Regular.ttf"
+    },
+    {
+      "id": "RES_FONT_FIRA_MONO",
+      "path": "fonts/FiraCode-Retina.ttf"
+    },
+    {
+      "id": "RES_FONT_ARIAL",
+      "path": "fonts/ARIAL.TTF"
+    },
+    {
+      "id": "RES_FONT_SERIF",
+      "path": "fonts/IBMPlexSerif-Regular.ttf"
+    }
+  ]
+}

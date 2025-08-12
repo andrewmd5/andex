@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <title>Emscripten</title>
+    <style>
+      /* ---------- App base ---------- */
+      :root {
+        /* macOS-like colors */
+        --overlay-bg: rgba(0, 0, 0, 0.3);
+        --panel-bg: #f6f6f6;
+        --panel-fg: #1d1d1f;
+        --secondary-fg: #86868b;
+        --tertiary-fg: #86868b;
+        --separator: rgba(0, 0, 0, 0.1);
+        
+        /* Button colors matching macOS */
+        --button-primary-bg: #007aff;
+        --button-primary-fg: #ffffff;
+        --button-primary-hover: #0051d5;
+        --button-secondary-bg: #f2f2f7;
+        --button-secondary-fg: #007aff;
+        --button-secondary-hover: #e8e8ed;
+        --button-secondary-border: rgba(0, 0, 0, 0.04);
+        
+        --button-destructive-bg: #ff3b30;
+        --button-destructive-fg: #ffffff;
+        --button-destructive-hover: #d70015;
+        
+        --input-bg: #ffffff;
+        --input-border: rgba(0, 0, 0, 0.1);
+        --input-focus: #007aff;
+        
+        --radius: 10px;
+        --button-radius: 6px;
+        --shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0, 0, 0, 0.1);
+        --font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        
+        /* Backdrop filter support */
+        --backdrop: blur(24px) saturate(180%);
+      }
+      
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --overlay-bg: rgba(0, 0, 0, 0.5);
+          --panel-bg: #1e1e1e;
+          --panel-fg: #f5f5f7;
+          --secondary-fg: #98989d;
+          --tertiary-fg: #6e6e73;
+          --separator: rgba(255, 255, 255, 0.1);
+          
+          --button-primary-bg: #0a84ff;
+          --button-primary-fg: #ffffff;
+          --button-primary-hover: #0060df;
+          --button-secondary-bg: #2c2c2e;
+          --button-secondary-fg: #0a84ff;
+          --button-secondary-hover: #3a3a3c;
+          --button-secondary-border: rgba(255, 255, 255, 0.04);
+          
+          --button-destructive-bg: #ff453a;
+          --button-destructive-fg: #ffffff;
+          --button-destructive-hover: #d70015;
+          
+          --input-bg: #1c1c1e;
+          --input-border: rgba(255, 255, 255, 0.1);
+          --input-focus: #0a84ff;
+          
+          --shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 0, 0, 0.5);
+        }
+      }
+
+      html, body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        background-color: #000;
+        font-family: var(--font);
+        color: var(--panel-fg);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* ---------- Canvas (app surface) ---------- */
+      .game {
+        position: absolute;
+        inset: 0;
+        margin: 0;
+        border: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        display: block;
+        image-rendering: optimizeSpeed;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: -o-crisp-edges;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: optimize-contrast;
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
+        -ms-interpolation-mode: nearest-neighbor;
+        z-index: 0;
+      }
+
+      /* ---------- Native-like dialog styling ---------- */
+      [data-pick="overlay"] {
+        position: fixed;
+        inset: 0;
+        background: var(--overlay-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2147483647;
+        pointer-events: auto;
+        animation: pick-fade-in 200ms ease-out forwards;
+      }
+      
+      @media (prefers-reduced-motion: reduce) {
+        [data-pick="overlay"] { animation: none; }
+      }
+      
+      @keyframes pick-fade-in {
+        from { 
+          opacity: 0;
+        }
+        to { 
+          opacity: 1;
+        }
+      }
+
+      [data-pick="dialog"] {
+        background: var(--panel-bg);
+        color: var(--panel-fg);
+        padding: 20px;
+        border-radius: var(--radius);
+        min-width: 320px;
+        max-width: 480px;
+        width: min(90vw, 480px);
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        animation: pick-scale-in 200ms ease-out forwards;
+      }
+      
+      @keyframes pick-scale-in {
+        from { 
+          transform: scale(0.96);
+          opacity: 0;
+        }
+        to { 
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      [data-pick="header"] {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      
+      [data-pick="icon"] {
+        width: 48px;
+        height: 48px;
+        flex: 0 0 48px;
+        display: none; /* Hide icons by default for cleaner look */
+      }
+      
+      /* Show icons only for warning/error dialogs */
+      [data-pick-kind="warning"] [data-pick="icon"],
+      [data-pick-kind="error"] [data-pick="icon"] {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+      }
+      
+      [data-pick="icon"][data-icon="caution"]::after { content: "⚠️"; }
+      [data-pick="icon"][data-icon="error"]::after { content: "🛑"; }
+      [data-pick="icon"][data-icon="trash"]::after { content: "🗑️"; }
+      [data-pick="icon"][data-icon="folder"]::after { content: "📁"; }
+      [data-pick="icon"][data-icon="document"]::after { content: "📄"; }
+
+      [data-pick="title"] { 
+        font-weight: 600; 
+        font-size: 13px;
+        letter-spacing: -0.08px;
+        line-height: 1.3;
+        margin-bottom: 2px;
+      }
+      
+      [data-pick="message"] { 
+        font-size: 13px;
+        line-height: 1.4;
+        color: var(--secondary-fg);
+        letter-spacing: -0.08px;
+      }
+      
+      /* When there's an icon, adjust text layout */
+      [data-pick-kind="warning"] [data-pick="title"],
+      [data-pick-kind="error"] [data-pick="title"] {
+        margin-top: 4px;
+      }
+
+      [data-pick="row"] {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 4px 0;
+      }
+      
+      [data-pick="label"] { 
+        font-size: 13px;
+        color: var(--secondary-fg);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        width: 100%;
+      }
+      
+      [data-pick="input"] {
+        width: 100%;
+        padding: 8px 10px;
+        font-size: 13px;
+        color: var(--panel-fg);
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: var(--button-radius);
+        outline: none;
+        transition: border-color 150ms ease;
+      }
+      
+      [data-pick="input"]:focus {
+        border-color: var(--input-focus);
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+      }
+
+      [data-pick="file-button"] {
+        padding: 6px 12px;
+        border: 1px solid var(--button-secondary-border);
+        border-radius: var(--button-radius);
+        font-size: 13px;
+        background: var(--button-secondary-bg);
+        color: var(--panel-fg);
+        cursor: pointer;
+        transition: background-color 150ms ease;
+      }
+      
+      [data-pick="file-button"]:hover { 
+        background: var(--button-secondary-hover);
+      }
+      
+      [data-pick="summary"] {
+        flex: 1;
+        font-size: 13px;
+        color: var(--tertiary-fg);
+      }
+
+      [data-pick="file-list"] {
+        margin: 8px 0;
+      }
+      
+      [data-pick="file-list"] ul {
+        margin: 0;
+        padding: 8px;
+        list-style: none;
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: var(--button-radius);
+        max-height: 160px;
+        overflow-y: auto;
+        font-size: 12px;
+      }
+      
+      [data-pick="file-item"] {
+        padding: 4px 4px;
+        color: var(--secondary-fg);
+      }
+      
+      [data-pick="file-item"] + [data-pick="file-item"] {
+        border-top: 1px solid var(--separator);
+      }
+
+      [data-pick="actions"] {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 4px;
+        padding-top: 16px;
+        border-top: 1px solid var(--separator);
+      }
+      
+      /* Default button styling - secondary style */
+      [data-pick="button"] {
+        padding: 6px 16px;
+        min-width: 68px;
+        border: 1px solid var(--button-secondary-border);
+        border-radius: var(--button-radius);
+        font-size: 13px;
+        font-weight: 400;
+        background: var(--button-secondary-bg);
+        color: var(--button-secondary-fg);
+        cursor: pointer;
+        transition: all 150ms ease;
+        text-align: center;
+        letter-spacing: -0.08px;
+      }
+      
+      [data-pick="button"]:hover {
+        background: var(--button-secondary-hover);
+      }
+      
+      [data-pick="button"]:active {
+        transform: scale(0.98);
+      }
+      
+      /* Primary action buttons (OK, Yes, Save, Import) */
+      [data-pick="button"][data-action="ok"],
+      [data-pick="button"][data-action="yes"],
+      [data-pick="button"][data-action="save"],
+      [data-pick="button"][data-action="import"] {
+        background: var(--button-primary-bg);
+        color: var(--button-primary-fg);
+        border: none;
+        font-weight: 500;
+      }
+      
+      [data-pick="button"][data-action="ok"]:hover,
+      [data-pick="button"][data-action="yes"]:hover,
+      [data-pick="button"][data-action="save"]:hover,
+      [data-pick="button"][data-action="import"]:hover {
+        background: var(--button-primary-hover);
+      }
+      
+      /* Destructive actions */
+      [data-pick-kind="warning"] [data-pick="button"][data-action="yes"],
+      [data-pick-kind="error"] [data-pick="button"][data-action="yes"],
+      [data-pick="button"][data-action="delete"] {
+        background: var(--button-destructive-bg);
+        color: var(--button-destructive-fg);
+        border: none;
+      }
+      
+      [data-pick-kind="warning"] [data-pick="button"][data-action="yes"]:hover,
+      [data-pick-kind="error"] [data-pick="button"][data-action="yes"]:hover,
+      [data-pick="button"][data-action="delete"]:hover {
+        background: var(--button-destructive-hover);
+      }
+      
+      /* Cancel and No buttons remain secondary style */
+      [data-pick="button"][data-action="cancel"],
+      [data-pick="button"][data-action="no"] {
+        background: var(--button-secondary-bg);
+        color: var(--button-secondary-fg);
+      }
+      
+      /* Focus states */
+      [data-pick="button"]:focus-visible {
+        outline: 2px solid var(--input-focus);
+        outline-offset: 2px;
+      }
+      
+      /* File dialogs specific styling */
+      [data-pick-kind="open"] [data-pick="dialog"],
+      [data-pick-kind="save"] [data-pick="dialog"] {
+        min-width: 400px;
+        max-width: 520px;
+      }
+      
+      /* Reduce motion */
+      @media (prefers-reduced-motion: reduce) {
+        [data-pick="dialog"],
+        [data-pick="button"] {
+          animation: none;
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas class="game" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+    <script type="text/javascript">
+      var Module = {
+        preRun: [],
+        print: (...args)    => console.log("[stdout]: " + args.join(" ")),
+        printErr: (...args) => console.log("[stderr]: " + args.join(" ")),
+      };
+      window.onerror = (event) => console.log("[onerror]: " + event.message);
+    </script>
+    {{{ SCRIPT }}}
+  </body>
+</html>

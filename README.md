@@ -1,0 +1,1 @@
+an experimental cross-platform text editor. blog soon.
